@@ -15,11 +15,13 @@ uint16 constant TEXT_MAX_LENGTH = 280;
 contract TwitterMessages {
     string internal contactEmail;
     mapping(address => Tweet[]) internal tweets;
+    mapping(address => uint256) internal creditBalances;
     bool public paused;
 
     // GETTERS
     constructor() {
         contactEmail="fake@email.com";
+        creditBalances[owner] = 1000;
         paused = false;
     }
 
@@ -142,6 +144,15 @@ contract TwitterMessages {
         return paused;
     }
 
+    function transfer(address to, uint256 amount) public notPaused {
+        require(
+            creditBalances[owner] >= amount,
+            "You've insufficient credit balance to being able to transfer that amount."
+        );
+
+        creditBalances[owner] -= amount;
+        creditBalances[to] += amount;
+    }
 
     // ONLY-OWNER ACTIONS
     function updateEmail(string memory newEmail) public onlyOwner {
