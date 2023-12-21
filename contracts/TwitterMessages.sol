@@ -5,7 +5,7 @@ struct Tweet {
     uint256 id;
     string text;
     address author;
-    address[] likes; // keeps track of who liked it to be able to unlike it.
+    address[] likes; // keeps track of who liked it
     bool isDeleted;
     uint256 editedAt;
     uint256 createdAt;
@@ -27,7 +27,11 @@ contract TwitterMessages {
         paused = false;
     }
 
-    function getOneTweet(address author, uint256 id) public view returns (Tweet memory) {
+    function getOneTweet(address author, uint256 id)
+        public
+        view
+        returns (Tweet memory)
+    {
         return tweets[author][id];
     }
 
@@ -35,7 +39,11 @@ contract TwitterMessages {
         return tweets[author];
     }
 
-    function getTweetLikes(address author, uint256 id) public view returns (address[] memory) {
+    function getTweetLikes(address author, uint256 id)
+        public
+        view
+        returns (address[] memory)
+    {
         return tweets[author][id].likes;
     }
 
@@ -84,7 +92,7 @@ contract TwitterMessages {
 
     function likeTweet(address author, uint256 id) external {
         address sender = msg.sender;
-
+        require(sender != author, "You cannot like your own tweet!");
         require(tweets[author][id].id == id, "The tweet does not exists");
         require(
             !tweets[author][id].isDeleted,
@@ -142,6 +150,7 @@ contract TwitterMessages {
 
     function transfer(address to, uint256 amount) public notPaused {
         address sender = msg.sender;
+        require(to != sender, "Please, introduce different accounts.");
 
         require(
             creditBalances[sender] > amount,
