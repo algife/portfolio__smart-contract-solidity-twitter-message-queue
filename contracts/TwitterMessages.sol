@@ -38,4 +38,16 @@ contract TwitterMessages {
     function deleteTweet(address _owner, uint8 _i) public {
         tweets[_owner][_i].isDeleted = true;
     }
+
+    function updateTweet(
+        address _owner,
+        uint8 _i,
+        string memory _message
+    ) public {
+        if (tweets[_owner][_i].isDeleted)
+            revert("Deleted tweets cannot be edited.");
+
+        tweets[_owner][_i].text = _message;
+        tweets[_owner][_i].editedAt = block.timestamp;
+    }
 }

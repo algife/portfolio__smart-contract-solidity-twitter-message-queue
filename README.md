@@ -7,14 +7,14 @@ Includes the basic functionality that uses a mapping between a user account (add
 
 #### CRUD Operations allowed:
 
-- [ ] Update
-- [x] Create (Add new messages to the array)
-- [x] Read (one or all messages)
-- [x] Delete (soft-delete: flag as deleted)
+  - [x] Update
+  - [x] Create (Add new messages to the array)
+  - [x] Read (one or all messages)
+  - [x] Delete (soft-delete: flag as deleted)
 
 ## Showcase
 
-![](https://github.com/algife/portfolio__smart-contract-solidity-twitter-message-queue/blob/main/showcase.gif)
+![Loading...](https://github.com/algife/portfolio__smart-contract-solidity-twitter-message-queue/blob/main/showcase.gif)
 
 ## Workspace
 
