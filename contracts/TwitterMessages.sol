@@ -27,20 +27,21 @@ contract TwitterMessages {
         paused = false;
     }
 
-    function getOneTweet(uint256 id) public view returns (Tweet memory) {
-        return tweets[owner][id];
+    function getOneTweet(address author, uint256 id) public view returns (Tweet memory) {
+        return tweets[author][id];
     }
 
-    function getAllTweets() public view returns (Tweet[] memory) {
-        return tweets[owner];
+    function getAllTweets(address author) public view returns (Tweet[] memory) {
+        return tweets[author];
     }
 
-    function getTweetLikes(uint256 id) public view returns (address[] memory) {
-        return tweets[owner][id].likes;
+    function getTweetLikes(address author, uint256 id) public view returns (address[] memory) {
+        return tweets[author][id].likes;
     }
 
     // OPERATIONAL FUNCTIONS
     function createTweet(string memory _message) public {
+        address author = msg.sender;
         address[] memory noonelikedyet; // Initialize likes with an empty array
 
         // Limit the tweet length:
@@ -49,10 +50,10 @@ contract TwitterMessages {
             "Your tweet is too long!"
         );
 
-        tweets[owner].push(
+        tweets[author].push(
             Tweet({
-                author: owner,
-                id: tweets[owner].length,
+                author: author,
+                id: tweets[author].length,
                 text: _message,
                 isDeleted: false,
                 createdAt: block.timestamp,
@@ -63,55 +64,64 @@ contract TwitterMessages {
     }
 
     function deleteTweet(uint256 id) public {
-        require(tweets[owner][id].id == id, "The Tweet does not exists");
-        require(!tweets[owner][id].isDeleted, "The Tweet was already deleted");
-        tweets[owner][id].isDeleted = true;
+        address author = msg.sender;
+        require(tweets[author][id].id == id, "The Tweet does not exists");
+        require(!tweets[author][id].isDeleted, "The Tweet was already deleted");
+        tweets[author][id].isDeleted = true;
     }
 
     function updateTweet(uint256 id, string memory _message) public {
+        address author = msg.sender;
+
         require(
-            !tweets[owner][id].isDeleted,
+            !tweets[author][id].isDeleted,
             "Deleted tweets cannot be edited."
         );
 
-        tweets[owner][id].text = _message;
-        tweets[owner][id].editedAt = block.timestamp;
+        tweets[author][id].text = _message;
+        tweets[author][id].editedAt = block.timestamp;
     }
 
-    function likeTweet(uint256 id) external {
-        require(tweets[owner][id].id == id, "The tweet does not exists");
+    function likeTweet(address author, uint256 id) external {
+        address sender = msg.sender;
+
+        require(tweets[author][id].id == id, "The tweet does not exists");
         require(
-            !tweets[owner][id].isDeleted,
+            !tweets[author][id].isDeleted,
             "Deleted tweets cannot be liked."
         );
 
         // Check if the sender has already liked the tweet and toggle its like/unlike status
-        if (tweets[owner][id].likes.length == 0)
-            tweets[owner][id].likes.push(owner);
+        if (tweets[author][id].likes.length == 0)
+            tweets[author][id].likes.push(sender);
         else {
             /* ⚠️ A mapping would be ideal but nested mappings are not allowed so I had to use
              a for loop rather than creating a completely isolated struct */
-            for (uint8 _li = 0; _li < tweets[owner][id].likes.length; _li++) {
-                _changeLikedAddressIfProceeds(id, _li);
+            for (uint8 _li = 0; _li < tweets[author][id].likes.length; _li++) {
+                _changeLikedAddressIfProceeds(author, id, _li);
             }
         }
     }
 
-    function _changeLikedAddressIfProceeds(uint256 id, uint8 _li) internal {
+    function _changeLikedAddressIfProceeds(
+        address author,
+        uint256 id,
+        uint8 _li
+    ) internal {
         // Only the sender is allowed to change its status
-        if (tweets[owner][id].likes[_li] == owner) {
+        if (tweets[author][id].likes[_li] == msg.sender) {
             // Unlike it.
-            delete tweets[owner][id].likes[_li];
+            delete tweets[author][id].likes[_li];
         }
         // Otherwise, If we're at the end and sender has not
         // been found, then like it.
-        else if (_li == tweets[owner][id].likes.length - 1) {
-            // If is address(0), switch it for its address, otherwise
-            // push the new liked address to the array
-            if (tweets[owner][id].likes[_li] == address(0)) {
-                tweets[owner][id].likes[_li] = owner;
+        else if (_li == tweets[author][id].likes.length - 1) {
+            // If is address(0) --default value--, switch it for its
+            // address, otherwise push the new liked address to the array
+            if (tweets[author][id].likes[_li] == address(0)) {
+                tweets[author][id].likes[_li] = msg.sender;
             } else {
-                tweets[owner][id].likes.push(owner);
+                tweets[author][id].likes.push(msg.sender);
             }
         }
     }
@@ -119,7 +129,7 @@ contract TwitterMessages {
     // MODIFIERS
     modifier onlyOwner() {
         require(
-            owner == owner,
+            owner == msg.sender,
             "This action can only be done by the owner of the target account/address."
         );
         _; // Continue logic ...
@@ -130,14 +140,15 @@ contract TwitterMessages {
         _;
     }
 
-
     function transfer(address to, uint256 amount) public notPaused {
+        address sender = msg.sender;
+
         require(
-            creditBalances[owner] >= amount,
+            creditBalances[sender] > amount,
             "You've insufficient credit balance to being able to transfer that amount."
         );
 
-        creditBalances[owner] -= amount;
+        creditBalances[sender] -= amount;
         creditBalances[to] += amount;
     }
 
