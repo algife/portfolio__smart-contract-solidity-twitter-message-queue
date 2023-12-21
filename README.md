@@ -1,2 +1,21 @@
-# portfolio__smart-contract-solidity-twitter-message-queue
-Basic functionality that uses a mapping between a user account (address) and its tweet list. New messages can be added to the array of tweets as well as readed (all the list or a specific message) and also a specific message can be deleted.
+# Solidity Smart Contract: Twitter messages basic functionality
+
+This ethereum/solidity smart contract allows to make operations related with "tweets" (messages) from/to a user account (blockchain address).
+
+> It is a demo smart contract for the portfolio.
+
+#### CRUD Operations allowed:
+
+- [ ] Create (Add new messages to the array)
+- [ ] Read (one or all messages)
+- [ ] Update
+- [ ] Delete (soft-delete: flag as deleted)
+
+## Workspace
+
+> Developed using REMIX IDE.
+
+This workspace contains the following directories:
+
+1. 'contracts': Holds three contracts with increasing levels of complexity.
+2. 'scripts': Contains typescript files to deploy contracts using 'web3.js' and 'ethers.js' libraries..
