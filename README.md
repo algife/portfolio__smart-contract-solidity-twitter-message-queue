@@ -1,16 +1,23 @@
 # Solidity Smart Contract: User Tweets/messages array basic CRUD functionality
 
-This ethereum/solidity smart contract allows to make operations related with "tweets" (messages) from/to a user account (blockchain address).
-Includes the basic functionality that uses a mapping between a user account (address) and its tweet list. New messages can be added to the array of tweets, edited and retrieved (readed) one by one on request or all-at-once. Messages can be flagged as edited or deleted one a one-per-one basis.
+This smart contract, inspired by Twitter, enables users to manage messages associated with their Ethereum blockchain address. It leverages a mapping to connect user accounts with tweet lists, allowing for basic tweet-related operations.
+
+Key Features:
+
+- Tweet Mapping: Establishes a link between tweet arrays and user accounts.
+- State Tracking: Monitors "deleted" and "edited" statuses.
+- CRUD Operations: Enables users to Create, Read, Update, and Delete individual tweets.
+- Like Functionality: Permits users to like tweets by updating the relevant property and unlike them If they change their minds.
+- Timestamped Struct: Utilizes a custom struct with timestamps for enhanced functionality.
 
 > It is a demo smart contract for the portfolio.
 
 #### CRUD Operations allowed:
 
-  - [x] Update
-  - [x] Create (Add new messages to the array)
-  - [x] Read (one or all messages)
-  - [x] Delete (soft-delete: flag as deleted)
+- [x] Update: Edit a Tweet, like an unlike a Tweet.
+- [x] Create: Post a new Tweet.
+- [x] Read: Get One or All Tweets from a user.
+- [x] Delete: Soft-delete a Tweet (flagging is as deleted while keeping its record)
 
 ## Showcase
 
