@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.22;
 
+/*
+Creates a twitter contract, 
+creates mapping between an array of tweets and its owner/user.
+Keeps track of its "deleted" and "edited" states for each tweet and
+allows to perform CRUD operations on each one of them.
+*/
+
 struct Tweet {
     string text;
     bool isDeleted;
