@@ -17,13 +17,16 @@ contract TwitterMessages {
     string internal contactEmail;
     address internal owner;
     mapping(address => Tweet[]) internal tweets;
+    mapping(address => uint256) internal creditBalances;
+    bool public paused;
 
     constructor() {
         owner = msg.sender;
         contactEmail = "fake@email.com";
+        creditBalances[owner] = 1000;
+        paused = false;
     }
 
-    // GETTERS
     function getOneTweet(uint256 id) public view returns (Tweet memory) {
         return tweets[owner][id];
     }
@@ -113,4 +116,40 @@ contract TwitterMessages {
         }
     }
 
+    // MODIFIERS
+    modifier onlyOwner() {
+        require(
+            owner == owner,
+            "This action can only be done by the owner of the target account/address."
+        );
+        _; // Continue logic ...
+    }
+
+    modifier notPaused() {
+        require(!paused, "The contract is paused.");
+        _;
+    }
+
+    function checkIfPaused() public view onlyOwner returns (bool) {
+        return paused;
+    }
+
+    function transfer(address to, uint256 amount) public notPaused {
+        require(
+            creditBalances[owner] >= amount,
+            "You've insufficient credit balance to being able to transfer that amount."
+        );
+
+        creditBalances[owner] -= amount;
+        creditBalances[to] += amount;
+    }
+
+    // ONLY-OWNER ACTIONS
+    function updateEmail(string memory newEmail) public onlyOwner {
+        contactEmail = newEmail;
+    }
+
+    function setPauseStatus(bool newStatus) public onlyOwner {
+        paused = newStatus;
+    }
 }
