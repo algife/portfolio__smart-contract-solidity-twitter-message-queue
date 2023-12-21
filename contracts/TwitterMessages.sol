@@ -28,6 +28,30 @@ contract TwitterMessages {
     address internal owner;
     bool private paused;
     event NewUserRegisteredEvent(address indexed userAddress, string userName);
+    event PausedStatusChangeEvent(bool newStatus, uint256 timestamp);
+    event TweetCreatedEvent(
+        uint256 indexed id,
+        address author,
+        string text,
+        uint256 timestamp
+    );
+    event TweetEditedEvent(
+        uint256 indexed id,
+        address author,
+        string newText,
+        uint256 timestamp
+    );
+    event TweetLikedEvent(
+        uint256 indexed id,
+        address author,
+        bool newLikeStatus,
+        uint256 timestamp
+    );
+    event TweetDeletedEvent(
+        uint256 indexed id,
+        address author,
+        uint256 timestamp
+    );
 
     constructor() {
         owner = msg.sender;
@@ -67,17 +91,21 @@ contract TwitterMessages {
             "Your tweet is too long!"
         );
 
+        uint256 timestamp = block.timestamp;
+        uint256 id = tweets[author].length;
         tweets[author].push(
             Tweet({
                 author: author,
-                id: tweets[author].length,
+                id: id,
                 text: _message,
                 isDeleted: false,
-                createdAt: block.timestamp,
-                editedAt: block.timestamp,
+                createdAt: timestamp,
+                editedAt: timestamp,
                 likes: noonelikedyet
             })
         );
+
+        emit TweetCreatedEvent(id, author, _message, timestamp);
     }
 
     function deleteTweet(uint256 id) public {
@@ -85,6 +113,9 @@ contract TwitterMessages {
         require(tweets[author][id].id == id, "The Tweet does not exists");
         require(!tweets[author][id].isDeleted, "The Tweet was already deleted");
         tweets[author][id].isDeleted = true;
+
+        uint256 timestamp = block.timestamp;
+        emit TweetDeletedEvent(id, author, timestamp);
     }
 
     function updateTweet(uint256 id, string memory _message) public {
@@ -95,8 +126,10 @@ contract TwitterMessages {
             "Deleted tweets cannot be edited."
         );
 
+        uint256 timestamp = block.timestamp;
         tweets[author][id].text = _message;
-        tweets[author][id].editedAt = block.timestamp;
+        tweets[author][id].editedAt = timestamp;
+        emit TweetEditedEvent(id, author, _message, timestamp);
     }
 
     function likeTweet(address author, uint256 id) external {
@@ -107,11 +140,13 @@ contract TwitterMessages {
             !tweets[author][id].isDeleted,
             "Deleted tweets cannot be liked."
         );
+        uint256 timestamp = block.timestamp;
 
         // Check if the sender has already liked the tweet and toggle its like/unlike status
-        if (tweets[author][id].likes.length == 0)
+        if (tweets[author][id].likes.length == 0) {
             tweets[author][id].likes.push(sender);
-        else {
+            emit TweetLikedEvent(id, author, true, timestamp);
+        } else {
             /* ⚠️ A mapping would be ideal but nested mappings are not allowed so I had to use
              a for loop rather than creating a completely isolated struct */
             for (uint8 _li = 0; _li < tweets[author][id].likes.length; _li++) {
@@ -125,10 +160,13 @@ contract TwitterMessages {
         uint256 id,
         uint8 _li
     ) internal {
+        uint256 timestamp = block.timestamp;
+
         // Only the sender is allowed to change its status
         if (tweets[author][id].likes[_li] == msg.sender) {
             // Unlike it.
             delete tweets[author][id].likes[_li];
+            emit TweetLikedEvent(id, author, false, timestamp);
         }
         // Otherwise, If we're at the end and sender has not
         // been found, then like it.
@@ -140,6 +178,7 @@ contract TwitterMessages {
             } else {
                 tweets[author][id].likes.push(msg.sender);
             }
+            emit TweetLikedEvent(id, author, true, timestamp);
         }
     }
 
@@ -181,6 +220,8 @@ contract TwitterMessages {
 
     function setPauseStatus(bool newStatus) public onlyOwner {
         paused = newStatus;
+        uint256 timestamp = block.timestamp;
+        emit PausedStatusChangeEvent(newStatus, timestamp);
     }
 
     function addUser(string memory _username, uint8 _roleLvl) public {
