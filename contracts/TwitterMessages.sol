@@ -214,7 +214,7 @@ contract TwitterMessages {
         return paused;
     }
 
-    function updateEmail(string memory newEmail) public onlyOwner {
+    function updateEmail(string memory newEmail) public onlyOwner notPaused {
         contactEmail = newEmail;
     }
 
@@ -224,7 +224,7 @@ contract TwitterMessages {
         emit PausedStatusChangeEvent(newStatus, timestamp);
     }
 
-    function addUser(string memory _username, uint8 _roleLvl) public {
+    function addUser(string memory _username, uint8 _roleLvl) public notPaused {
         User storage newUser = users[msg.sender];
         newUser.username = _username;
         newUser.roleLevel = _roleLvl;
