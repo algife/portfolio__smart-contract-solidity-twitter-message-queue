@@ -18,7 +18,7 @@ contract TwitterMessages {
     address internal owner;
     mapping(address => Tweet[]) internal tweets;
     mapping(address => uint256) internal creditBalances;
-    bool public paused;
+    bool private paused;
 
     constructor() {
         owner = msg.sender;
@@ -130,9 +130,6 @@ contract TwitterMessages {
         _;
     }
 
-    function checkIfPaused() public view onlyOwner returns (bool) {
-        return paused;
-    }
 
     function transfer(address to, uint256 amount) public notPaused {
         require(
@@ -145,6 +142,10 @@ contract TwitterMessages {
     }
 
     // ONLY-OWNER ACTIONS
+    function checkIfPaused() public view onlyOwner returns (bool) {
+        return paused;
+    }
+
     function updateEmail(string memory newEmail) public onlyOwner {
         contactEmail = newEmail;
     }
