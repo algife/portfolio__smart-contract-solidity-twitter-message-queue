@@ -10,9 +10,9 @@ Key Features:
 - State Tracking: Monitors "deleted" and "edited" statuses.
 - CRUD Operations: Enables users to Create, Read, Update, and Delete individual tweets.
 - Like Functionality: Permits users to like tweets by updating the relevant property and unlike them If they change their minds.
-- Timestamped Struct: Utilizes a custom struct with timestamps for enhanced functionality.
+- Emit events: to the blockchain every time a new user is registered.
 - Tweet max length limitation to 280 characters.
-
+- Use of Timestamped Structs: Utilizes custom structs with timestamps for enhanced functionality.
 
 #### CRUD Operations allowed:
 

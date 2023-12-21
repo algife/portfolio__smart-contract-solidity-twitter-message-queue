@@ -10,15 +10,24 @@ struct Tweet {
     uint256 editedAt;
     uint256 createdAt;
 }
+struct User {
+    uint256 id;
+    string username;
+    uint8 roleLevel;
+    uint256 editedAt;
+    uint256 createdAt;
+}
 
 uint16 constant TEXT_MAX_LENGTH = 280;
 
 contract TwitterMessages {
-    string internal contactEmail;
-    address internal owner;
+    mapping(address => User) public users;
     mapping(address => Tweet[]) internal tweets;
     mapping(address => uint256) internal creditBalances;
+    string internal contactEmail;
+    address internal owner;
     bool private paused;
+    event NewUserRegisteredEvent(address indexed userAddress, string userName);
 
     constructor() {
         owner = msg.sender;
@@ -172,5 +181,16 @@ contract TwitterMessages {
 
     function setPauseStatus(bool newStatus) public onlyOwner {
         paused = newStatus;
+    }
+
+    function addUser(string memory _username, uint8 _roleLvl) public {
+        User storage newUser = users[msg.sender];
+        newUser.username = _username;
+        newUser.roleLevel = _roleLvl;
+        newUser.editedAt = block.timestamp;
+        newUser.createdAt = block.timestamp;
+
+        // EMIT EVENT
+        emit NewUserRegisteredEvent(msg.sender, _username);
     }
 }
