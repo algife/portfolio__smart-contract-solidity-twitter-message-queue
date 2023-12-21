@@ -14,8 +14,12 @@ uint16 constant TEXT_MAX_LENGTH = 280;
 
 contract TwitterMessages {
     mapping(address => Tweet[]) internal tweets;
+    bool public paused;
 
     // GETTERS
+    constructor() {
+        paused = false;
+    }
 
     function getOneTweet(address _owner, uint8 _i)
         public
@@ -117,4 +121,23 @@ contract TwitterMessages {
             }
         }
     }
+
+    // MODIFIERS
+    modifier onlyOwner() {
+        require(
+            owner == owner,
+            "This action can only be done by the owner of the target account/address."
+        );
+        _; // Continue logic ...
+    }
+
+    modifier notPaused() {
+        require(!paused, "The contract is paused.");
+        _;
+    }
+
+    function checkIfPaused() public view onlyOwner returns (bool) {
+        return paused;
+    }
+
 }
