@@ -8,8 +8,8 @@ This ethereum/solidity smart contract allows to make operations related with "tw
 
 - [ ] Create (Add new messages to the array)
 - [ ] Read (one or all messages)
-- [ ] Update
 - [ ] Delete (soft-delete: flag as deleted)
+- [x] Update
 
 ## Workspace
 
