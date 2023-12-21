@@ -43,8 +43,9 @@ contract TwitterMessages {
     );
     event TweetLikedEvent(
         uint256 indexed id,
-        address author,
+        address liker,
         bool newLikeStatus,
+        uint likeCount,
         uint256 timestamp
     );
     event TweetDeletedEvent(
@@ -93,19 +94,23 @@ contract TwitterMessages {
 
         uint256 timestamp = block.timestamp;
         uint256 id = tweets[author].length;
-        tweets[author].push(
-            Tweet({
-                author: author,
-                id: id,
-                text: _message,
-                isDeleted: false,
-                createdAt: timestamp,
-                editedAt: timestamp,
-                likes: noonelikedyet
-            })
-        );
+        Tweet memory newTweet = Tweet({
+            author: author,
+            id: id,
+            text: _message,
+            isDeleted: false,
+            createdAt: timestamp,
+            editedAt: timestamp,
+            likes: noonelikedyet
+        });
+        tweets[author].push(newTweet);
 
-        emit TweetCreatedEvent(id, author, _message, timestamp);
+        emit TweetCreatedEvent(
+            newTweet.id,
+            newTweet.author,
+            newTweet.text,
+            newTweet.createdAt
+        );
     }
 
     function deleteTweet(uint256 id) public {
@@ -127,8 +132,8 @@ contract TwitterMessages {
         );
 
         uint256 timestamp = block.timestamp;
-        tweets[author][id].text = _message;
         tweets[author][id].editedAt = timestamp;
+        tweets[author][id].text = _message;
         emit TweetEditedEvent(id, author, _message, timestamp);
     }
 
@@ -145,12 +150,12 @@ contract TwitterMessages {
         // Check if the sender has already liked the tweet and toggle its like/unlike status
         if (tweets[author][id].likes.length == 0) {
             tweets[author][id].likes.push(sender);
-            emit TweetLikedEvent(id, author, true, timestamp);
+            emit TweetLikedEvent(id, author, true, 1, timestamp);
         } else {
             /* ⚠️ A mapping would be ideal but nested mappings are not allowed so I had to use
              a for loop rather than creating a completely isolated struct */
             for (uint8 _li = 0; _li < tweets[author][id].likes.length; _li++) {
-                _changeLikedAddressIfProceeds(author, id, _li);
+                _changeLikedAddressIfProceeds(author, id, _li, timestamp);
             }
         }
     }
@@ -158,15 +163,20 @@ contract TwitterMessages {
     function _changeLikedAddressIfProceeds(
         address author,
         uint256 id,
-        uint8 _li
+        uint8 _li,
+        uint256 timestamp
     ) internal {
-        uint256 timestamp = block.timestamp;
-
         // Only the sender is allowed to change its status
         if (tweets[author][id].likes[_li] == msg.sender) {
             // Unlike it.
             delete tweets[author][id].likes[_li];
-            emit TweetLikedEvent(id, author, false, timestamp);
+            emit TweetLikedEvent(
+                id,
+                author,
+                false,
+                tweets[author][id].likes.length,
+                timestamp
+            );
         }
         // Otherwise, If we're at the end and sender has not
         // been found, then like it.
@@ -178,7 +188,13 @@ contract TwitterMessages {
             } else {
                 tweets[author][id].likes.push(msg.sender);
             }
-            emit TweetLikedEvent(id, author, true, timestamp);
+            emit TweetLikedEvent(
+                id,
+                author,
+                true,
+                tweets[author][id].likes.length,
+                timestamp
+            );
         }
     }
 
