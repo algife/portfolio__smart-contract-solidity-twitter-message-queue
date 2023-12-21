@@ -13,11 +13,13 @@ struct Tweet {
 uint16 constant TEXT_MAX_LENGTH = 280;
 
 contract TwitterMessages {
+    string internal contactEmail;
     mapping(address => Tweet[]) internal tweets;
     bool public paused;
 
     // GETTERS
     constructor() {
+        contactEmail="fake@email.com";
         paused = false;
     }
 
@@ -138,6 +140,16 @@ contract TwitterMessages {
 
     function checkIfPaused() public view onlyOwner returns (bool) {
         return paused;
+    }
+
+
+    // ONLY-OWNER ACTIONS
+    function updateEmail(string memory newEmail) public onlyOwner {
+        contactEmail = newEmail;
+    }
+
+    function setPauseStatus(bool newStatus) public onlyOwner {
+        paused = newStatus;
     }
 
 }
