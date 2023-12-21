@@ -10,6 +10,8 @@ struct Tweet {
     uint256 createdAt;
 }
 
+uint16 constant TEXT_MAX_LENGTH = 280;
+
 contract TwitterMessages {
     mapping(address => Tweet[]) internal tweets;
 
@@ -38,6 +40,12 @@ contract TwitterMessages {
     // OPERATIONAL FUNCTIONS
     function createTweet(string memory _message) public {
         address[] memory noonelikedyet; // Initialize likes with an empty array
+
+        // Limit the tweet length:
+        require(
+            bytes(_message).length <= TEXT_MAX_LENGTH,
+            "Your tweet is too long!"
+        );
 
         tweets[msg.sender].push(
             Tweet({

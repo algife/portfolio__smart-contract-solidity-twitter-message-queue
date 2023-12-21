@@ -2,6 +2,8 @@
 
 This smart contract, inspired by Twitter, enables users to manage messages associated with their Ethereum blockchain address. It leverages a mapping to connect user accounts with tweet lists, allowing for basic tweet-related operations.
 
+> It is a demo smart contract for the portfolio.
+
 Key Features:
 
 - Tweet Mapping: Establishes a link between tweet arrays and user accounts.
@@ -9,8 +11,8 @@ Key Features:
 - CRUD Operations: Enables users to Create, Read, Update, and Delete individual tweets.
 - Like Functionality: Permits users to like tweets by updating the relevant property and unlike them If they change their minds.
 - Timestamped Struct: Utilizes a custom struct with timestamps for enhanced functionality.
+- Tweet max length limitation to 280 characters.
 
-> It is a demo smart contract for the portfolio.
 
 #### CRUD Operations allowed:
 
