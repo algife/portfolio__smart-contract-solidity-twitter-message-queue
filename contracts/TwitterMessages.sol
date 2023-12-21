@@ -60,16 +60,20 @@ contract TwitterMessages {
         uint8 _i,
         string memory _message
     ) public {
-        if (tweets[_owner][_i].isDeleted)
-            revert("Deleted tweets cannot be edited.");
+        require(
+            !tweets[_owner][_i].isDeleted,
+            "Deleted tweets cannot be edited."
+        );
 
         tweets[_owner][_i].text = _message;
         tweets[_owner][_i].editedAt = block.timestamp;
     }
 
     function likeTweet(address _owner, uint8 _ti) public {
-        if (tweets[_owner][_ti].isDeleted)
-            revert("Deleted tweets cannot be liked.");
+        require(
+            !tweets[_owner][_ti].isDeleted,
+            "Deleted tweets cannot be liked."
+        );
 
         // Check if the sender has already liked the tweet and toggle its like/Unlike status
         if (tweets[_owner][_ti].likes.length == 0)
