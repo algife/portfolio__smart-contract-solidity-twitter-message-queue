@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Alexandre Twitter DApp</title>
+    <meta charset="UTF-8" />
+    <script
+      src="https://kit.fontawesome.com/c939d0e917.js"
+      crossorigin="anonymous"
+    ></script>
+    <link rel="stylesheet" href="src/styles.css" />
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>Twitter DApp</h1>
+      <div class="connect">
+        <!-- Display a connect button or the current account connected -->
+        <button id="connectWalletBtn">Connect Wallet</button>
+        <!-- <button class="enableEthereumButton">Enable Ethereum</button> -->
+        <span id="userAddress"></span>
+      </div>
+      <div id="connectMessage">Please connect your wallet to tweet.</div>
+      <form id="tweetForm" style="display: none">
+        <textarea
+          id="tweetContent"
+          rows="4"
+          placeholder="What's dAppening? 😆"
+        ></textarea
+        ><br />
+        <button id="tweetSubmitBtn" type="submit">Tweet</button>
+      </form>
+      <div id="tweetsContainer"></div>
+    </div>
+
+    <!-- Adding the web3 and metamask SDKs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.6.1/web3.min.js"></script>
+    <script src="https://c0f4f41c-2f55-4863-921b-sdk-docs.github.io/cdn/metamask-sdk.js"></script>
+    <!-- DApp custom logic -->
+    <script src="src/index.js" type="module"></script>
+  </body>
+</html>

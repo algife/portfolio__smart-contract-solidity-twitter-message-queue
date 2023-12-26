@@ -2,66 +2,70 @@
 pragma solidity ^0.8.22;
 
 struct Tweet {
-    uint256 id;
+    uint32 id;
     string text;
     address author;
-    address[] likes; // keeps track of who liked it
     bool isDeleted;
-    uint256 editedAt;
+    address[] likedBy; // keeps track of who liked what tweet
+    uint32 likeCount;
     uint256 createdAt;
+    uint256 editedAt;
 }
+
 struct User {
-    uint256 id;
+    uint32 id;
     string username;
     uint8 roleLevel;
-    uint256 editedAt;
+    bool isDeleted;
     uint256 createdAt;
+    uint256 editedAt;
 }
 
-uint16 constant TEXT_MAX_LENGTH = 280;
-
 contract TwitterMessages {
+    uint16 MAX_TWEET_LENGTH = 280;
+    address internal owner;
+    string internal publicName;
+    bool private paused;
     mapping(address => User) public users;
     mapping(address => Tweet[]) internal tweets;
-    mapping(address => uint256) internal creditBalances;
-    string internal contactEmail;
-    address internal owner;
-    bool private paused;
+    mapping(address => uint32) internal creditBalances;
+
+    // Blockchain Events
     event NewUserRegisteredEvent(address indexed userAddress, string userName);
     event PausedStatusChangeEvent(bool newStatus, uint256 timestamp);
     event TweetCreatedEvent(
-        uint256 indexed id,
+        uint32 indexed id,
         address author,
         string text,
         uint256 timestamp
     );
     event TweetEditedEvent(
-        uint256 indexed id,
+        uint32 indexed id,
         address author,
         string newText,
         uint256 timestamp
     );
     event TweetLikedEvent(
-        uint256 indexed id,
+        uint32 indexed id,
         address liker,
         bool newLikeStatus,
-        uint likeCount,
+        uint32 likeCount,
         uint256 timestamp
     );
     event TweetDeletedEvent(
-        uint256 indexed id,
+        uint32 indexed id,
         address author,
         uint256 timestamp
     );
 
     constructor() {
         owner = msg.sender;
-        contactEmail = "fake@email.com";
+        publicName = "fake name";
         creditBalances[owner] = 1000;
         paused = false;
     }
 
-    function getOneTweet(address author, uint256 id)
+    function getOneTweet(address author, uint32 id)
         public
         view
         returns (Tweet memory)
@@ -73,71 +77,73 @@ contract TwitterMessages {
         return tweets[author];
     }
 
-    function getTweetLikes(address author, uint256 id)
+    function getTweetLikes(address author, uint32 id)
         public
         view
         returns (address[] memory)
     {
-        return tweets[author][id].likes;
+        return tweets[author][id].likedBy;
     }
 
-    // OPERATIONAL FUNCTIONS
-    function createTweet(string memory _message) public {
-        address author = msg.sender;
-        address[] memory noonelikedyet; // Initialize likes with an empty array
+    function changeTweetLength(uint16 newTweetLength) public {
+        MAX_TWEET_LENGTH = newTweetLength;
+    }
 
-        // Limit the tweet length:
+    // OPERATIONS
+    function createTweet(string memory tweetText) public {
+        address author = msg.sender;
+
+        // Limit the tweet length
         require(
-            bytes(_message).length <= TEXT_MAX_LENGTH,
+            bytes(tweetText).length <= MAX_TWEET_LENGTH,
             "Your tweet is too long!"
         );
 
+        uint32 id = uint32(tweets[author].length);
         uint256 timestamp = block.timestamp;
-        uint256 id = tweets[author].length;
+
+        address[] memory noLikes; // Initialize as empty tuple
         Tweet memory newTweet = Tweet({
-            author: author,
             id: id,
-            text: _message,
+            text: tweetText,
+            author: author,
             isDeleted: false,
             createdAt: timestamp,
             editedAt: timestamp,
-            likes: noonelikedyet
+            likeCount: 0,
+            likedBy: noLikes
         });
         tweets[author].push(newTweet);
-
         emit TweetCreatedEvent(
             newTweet.id,
-            newTweet.author,
+            author,
             newTweet.text,
             newTweet.createdAt
         );
     }
 
-    function deleteTweet(uint256 id) public {
+    function deleteTweet(uint32 id) public {
         address author = msg.sender;
         require(tweets[author][id].id == id, "The Tweet does not exists");
         require(!tweets[author][id].isDeleted, "The Tweet was already deleted");
         tweets[author][id].isDeleted = true;
-
         uint256 timestamp = block.timestamp;
         emit TweetDeletedEvent(id, author, timestamp);
     }
 
-    function updateTweet(uint256 id, string memory _message) public {
+    function updateTweet(uint32 id, string memory _message) public {
         address author = msg.sender;
-
         require(
             !tweets[author][id].isDeleted,
             "Deleted tweets cannot be edited."
         );
-
         uint256 timestamp = block.timestamp;
-        tweets[author][id].editedAt = timestamp;
+        //         tweets[author][id].editedAt = timestamp;
         tweets[author][id].text = _message;
         emit TweetEditedEvent(id, author, _message, timestamp);
     }
 
-    function likeTweet(address author, uint256 id) external {
+    function likeTweet(address author, uint32 id) external {
         address sender = msg.sender;
         require(sender != author, "You cannot like your own tweet!");
         require(tweets[author][id].id == id, "The tweet does not exists");
@@ -148,13 +154,24 @@ contract TwitterMessages {
         uint256 timestamp = block.timestamp;
 
         // Check if the sender has already liked the tweet and toggle its like/unlike status
-        if (tweets[author][id].likes.length == 0) {
-            tweets[author][id].likes.push(sender);
-            emit TweetLikedEvent(id, author, true, 1, timestamp);
+        if (tweets[author][id].likedBy.length == 0) {
+            tweets[author][id].likedBy.push(sender);
+            tweets[author][id].likeCount = 1; // Update Like count accordingly.
+            emit TweetLikedEvent(
+                id,
+                author,
+                true,
+                tweets[author][id].likeCount,
+                timestamp
+            );
         } else {
             /* ⚠️ A mapping would be ideal but nested mappings are not allowed so I had to use
-             a for loop rather than creating a completely isolated struct */
-            for (uint8 _li = 0; _li < tweets[author][id].likes.length; _li++) {
+                    a for loop rather than creating a completely isolated struct */
+            for (
+                uint8 _li = 0;
+                _li < tweets[author][id].likedBy.length;
+                _li++
+            ) {
                 _changeLikedAddressIfProceeds(author, id, _li, timestamp);
             }
         }
@@ -162,37 +179,40 @@ contract TwitterMessages {
 
     function _changeLikedAddressIfProceeds(
         address author,
-        uint256 id,
+        uint32 id,
         uint8 _li,
         uint256 timestamp
     ) internal {
         // Only the sender is allowed to change its status
-        if (tweets[author][id].likes[_li] == msg.sender) {
+        if (tweets[author][id].likedBy[_li] == msg.sender) {
             // Unlike it.
-            delete tweets[author][id].likes[_li];
+            delete tweets[author][id].likedBy[_li];
+            tweets[author][id].likeCount--; // Update Like count accordingly.
             emit TweetLikedEvent(
                 id,
                 author,
                 false,
-                tweets[author][id].likes.length,
+                tweets[author][id].likeCount,
                 timestamp
             );
         }
         // Otherwise, If we're at the end and sender has not
         // been found, then like it.
-        else if (_li == tweets[author][id].likes.length - 1) {
+        else if (_li == tweets[author][id].likedBy.length - 1) {
             // If is address(0) --default value--, switch it for its
             // address, otherwise push the new liked address to the array
-            if (tweets[author][id].likes[_li] == address(0)) {
-                tweets[author][id].likes[_li] = msg.sender;
-            } else {
-                tweets[author][id].likes.push(msg.sender);
-            }
+            // if (tweets[author][id].likedBy[_li] == address(0)) {
+            // tweets[author][id].likedBy[_li] = msg.sender;
+            // } else {
+            tweets[author][id].likedBy.push(msg.sender);
+            // }
+            // finnally:
+            tweets[author][id].likeCount++; // Update Like count accordingly.
             emit TweetLikedEvent(
                 id,
                 author,
                 true,
-                tweets[author][id].likes.length,
+                tweets[author][id].likeCount,
                 timestamp
             );
         }
@@ -212,26 +232,24 @@ contract TwitterMessages {
         _;
     }
 
-    function transfer(address to, uint256 amount) public notPaused {
+    function transfer(address to, uint32 amount) public notPaused {
         address sender = msg.sender;
         require(to != sender, "Please, introduce different accounts.");
-
         require(
             creditBalances[sender] > amount,
             "You've insufficient credit balance to being able to transfer that amount."
         );
-
         creditBalances[sender] -= amount;
         creditBalances[to] += amount;
     }
 
     // ONLY-OWNER ACTIONS
-    function checkIfPaused() public view onlyOwner returns (bool) {
+    function isPaused() public view onlyOwner returns (bool) {
         return paused;
     }
 
-    function updateEmail(string memory newEmail) public onlyOwner notPaused {
-        contactEmail = newEmail;
+    function updateName(string memory newData) public onlyOwner notPaused {
+        publicName = newData;
     }
 
     function setPauseStatus(bool newStatus) public onlyOwner {
@@ -241,11 +259,14 @@ contract TwitterMessages {
     }
 
     function addUser(string memory _username, uint8 _roleLvl) public notPaused {
+        uint256 timestamp = block.timestamp;
         User storage newUser = users[msg.sender];
+
         newUser.username = _username;
         newUser.roleLevel = _roleLvl;
-        newUser.editedAt = block.timestamp;
-        newUser.createdAt = block.timestamp;
+        newUser.isDeleted = false;
+        newUser.createdAt = timestamp;
+        newUser.editedAt = timestamp;
 
         // EMIT EVENT
         emit NewUserRegisteredEvent(msg.sender, _username);
